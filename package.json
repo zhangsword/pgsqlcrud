@@ -1,6 +1,6 @@
 {
   "name": "pgcrud",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "private": false,
   "scripts": {
     "test": "mocha"
@@ -20,4 +20,6 @@
   "engines": {
     "node": "4.x"
   }
+  "repository": "zhangsword/pgsqlcrud",
+  "license": "MIT"
 }

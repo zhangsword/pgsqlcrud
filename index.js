@@ -4,11 +4,6 @@
  * sword_zhang@163.com
  * MIT Licensed
  */
-const express = require("express");
-const bodyParser = require("body-parser");
-const app = express();
-const port = 1337;
-
 var tbDefine = [];
 var dbname = "TEST";
 var Q = require("q");
@@ -17,48 +12,6 @@ var moment = require("moment");
 var db2;
 var log = require("log4node");
 var TIMESTAMP_FORMAT = "YYYY-MM-DD HH:mm:ss";
-
-app.use(bodyParser.json());
-
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-);
-
-app.get("/getuser", async (request, response) => {
-  const Pool = require("pg").Pool;
-  const pool = new Pool({
-    user: "postgres",
-    host: "9.110.168.36",
-    database: "buzzudev",
-    password: "123456",
-    port: 5432,
-  });
-  await init({ db: pool, dbname: "buzzudev" })
-  await getAll("users")
-
-  // let projectObj = [
-  //   {
-  //     pku: "test",
-  //     name: "productName",
-  //     description: "description",
-  //     original_price: 99.99,
-  //     regular_price: 77.77,
-  //     taxid: 1,
-  //     type_id: 1,
-  //     supply_id: 1
-  //   }
-  // ];
-  // await insert("product", projectObj);
-
-  // await removeById("users", 1000000003)
-  response.json({ info: "OK" });
-});
-
-app.listen(port, () => {
-  console.log(`App running on port ${port}.`);
-});
 
 /**
  * set database with param "name"
@@ -183,19 +136,19 @@ var checkArrValid = function (name, tbObjArr) {
  **/
 var checkValid = function (name, tbObj) {
   var deferred = Q.defer();
-  console.log("check field start************************************");
+  console.debug("check field start************************************");
   var resultArr = [];
   var tb = getTbDefine(name);
   for (var i = 0; i < tb.FIELD_DEFINITION.length; i++) {
     var item = tb.FIELD_DEFINITION[i];
     var data = tbObj[item.column_name];
-    console.log(
+    console.debug(
       "Checking field:" + item.column_name + " value=" + data + "________"
     );
     if (typeof data == "string" || data instanceof String) {
-      console.log("data='" + data + "'");
+      console.debug("data='" + data + "'");
     } else {
-      console.log("data=" + data);
+      console.debug("data=" + data);
     }
     if (
       !item.is_nullable &&
@@ -210,7 +163,7 @@ var checkValid = function (name, tbObj) {
         } else {
           switch (item.data_type) {
             case 4:
-              console.log(
+              console.debug(
                 "data != parseInt(data, 10):" + (data != parseInt(data, 10))
               );
               if (
@@ -218,7 +171,7 @@ var checkValid = function (name, tbObj) {
                 typeof data == "string" ||
                 data instanceof String
               ) {
-                console.log("data is invalid");
+                console.debug("data is invalid");
                 resultArr.push({
                   field: item.COLUMN_NAME,
                   value: data,
@@ -228,12 +181,12 @@ var checkValid = function (name, tbObj) {
               }
               break;
             case 12:
-              console.log(
+              console.debug(
                 "typeof data != 'string' && !data instanceof String:" +
                   (typeof data != "string" && !data instanceof String)
               );
               if (typeof data != "string" && !(data instanceof String)) {
-                console.log("data type invalid");
+                console.debug("data type invalid");
                 resultArr.push({
                   field: item.COLUMN_NAME,
                   value: data,
@@ -242,7 +195,7 @@ var checkValid = function (name, tbObj) {
                 });
               } else {
                 if (data.length > item.COLUMN_SIZE) {
-                  console.log("data length invalid");
+                  console.debug("data length invalid");
                   resultArr.push({
                     field: item.COLUMN_NAME,
                     value: data,
@@ -258,12 +211,12 @@ var checkValid = function (name, tbObj) {
               }
               break;
             case 93:
-              console.log(
+              console.debug(
                 "!moment(data, TIMESTAMP_FORMAT):" +
                   !moment(data, TIMESTAMP_FORMAT).isValid()
               );
               if (!moment(data, TIMESTAMP_FORMAT).isValid()) {
-                console.log("date format invalid");
+                console.debug("date format invalid");
                 resultArr.push({
                   field: item.COLUMN_NAME,
                   value: data,
@@ -323,7 +276,7 @@ var checkValid = function (name, tbObj) {
  *
  **/
 var getTbDefine = function (name) {
-  console.log("tbDefine ====== " + tbDefine);
+  console.debug("tbDefine ====== " + tbDefine);
   for (var i = 0; i < tbDefine.length; i++) {
     var item = tbDefine[i];
     if (item.table_name == name) {
@@ -390,13 +343,13 @@ var getFldDefine = function (tbname, fldname) {
  **/
 function exeQuery(sql) {
   var deferred = Q.defer();
-  console.log("sql=" + sql);
+  console.debug("sql=" + sql);
   db2.query(sql, function (error, data) {
     if (error) {
       log.error("db error:" + JSON.stringify(error));
       deferred.reject(error);
     } else {
-      console.log("db data=" + JSON.stringify(data));
+      console.debug("db data=" + JSON.stringify(data));
       deferred.resolve(data);
     }
   });
@@ -479,7 +432,7 @@ var insert = function (name, dataObj) {
     });
   } else {
     checkValid(name, dataObj).then(function (result) {
-      console.log("check result=" + JSON.stringify(result));
+      console.debug("check result=" + JSON.stringify(result));
       if (result.length > 0) {
         deferred.reject(result);
       } else {
@@ -488,6 +441,41 @@ var insert = function (name, dataObj) {
     });
   }
   return deferred.promise;
+};
+
+/**
+ * execute multiple sqls with transactions
+ * @param {*} sqls 
+ * @param {*} valstrs 
+ * @returns 
+ */
+var executeQuerys = async function (sqls, valstrs) {
+  var deferred = Q.defer();
+  const client = await db2.connect();
+  try {
+    await client.query('BEGIN')
+    var promises = []
+    for (var i=0; i<sqls.length; i++) {
+      promises.push(client.query(sqls[i], valstrs[i]))
+    }
+    await Q.all(promises).then(
+      function (result2) {
+        console.log(result2)
+        client.query('COMMIT')
+        deferred.resolve(result2)
+        return deferred.promise
+      }, function (err) {
+        console.log(err)
+        deferred.reject(err);
+        return deferred.promise
+      }
+    )
+  } catch (error) {
+    client.query("ROLLBACK")
+    throw error
+  } finally {
+    client.release();
+  }
 };
 
 /**
@@ -530,11 +518,14 @@ var _insert = function (name, dataObj) {
   fldstr = fldstr.substring(0, fldstr.length - 1);
   valstr = valstr.substring(0, valstr.length - 1);
 
-  sql = sql.replace("[fldstr]", fldstr).replace("[valstr]", valstr);
+  sql = sql
+    .replace("[fldstr]", fldstr)
+    .replace("[valstr]", valstr)
+    .concat(" RETURNING *");
 
   db2.query(sql, valarr, (error, results) => {
     if (error) {
-      console.log("error>>>>>>> " + error)
+      console.debug("error>>>>>>> " + error);
       deferred.reject(error);
     } else {
       deferred.resolve(results);
@@ -581,12 +572,12 @@ var get = function (name, dataObj) {
 
   var fldstr = "",
     valarr = [];
-  console.log("tb.FIELD_DEFINITION.length==== " + tb.FIELD_DEFINITION.length);
+  console.debug("tb.FIELD_DEFINITION.length==== " + tb.FIELD_DEFINITION.length);
   var paraCount = 0;
   for (var i = 0; i < tb.FIELD_DEFINITION.length; i++) {
     var item = tb.FIELD_DEFINITION[i];
     var fldname = item.column_name;
-    console.log("column_name===" + item.column_name);
+    console.debug("column_name===" + item.column_name);
     if (dataObj[fldname] != null && dataObj[fldname] != undefined) {
       fldstr = fldstr + fldname + " = $" + ++paraCount + " and ";
       valarr.push(dataObj[fldname]);
@@ -597,11 +588,11 @@ var get = function (name, dataObj) {
   sql = sql.replace("[fldstr]", fldstr);
 
   db2.query(sql, valarr, (error, results) => {
-    console.log("error====" + error);
+    console.debug("error====" + error);
     if (error) {
       deferred.reject(error);
     } else {
-      console.log(results.rows);
+      console.debug(results.rows);
       deferred.resolve(results.rows);
     }
   });
@@ -611,13 +602,13 @@ var get = function (name, dataObj) {
 var getAll = function (name) {
   var deferred = Q.defer();
   var tb = getTbDefine(name);
-  var sql = "select * from " + tb.table_name ;
+  var sql = "select * from " + tb.table_name;
   db2.query(sql, (error, results) => {
     if (error) {
-      console.log("error====" + error);
+      console.debug("error====" + error);
       deferred.reject(error);
     } else {
-      console.log(results.rows)
+      console.debug(results.rows);
       deferred.resolve(results.rows);
     }
   });
@@ -638,7 +629,7 @@ var getAll = function (name) {
  * 
  **/
 var getById = function (name, id) {
-  console.log(name);
+  console.debug(name);
   var tb = getTbDefine(name);
   var dataObj = {};
   dataObj[tb.PK_FIELD] = id;
@@ -657,12 +648,14 @@ var update = function (name, dataObj) {
   var deferred = Q.defer();
   var resultArr = checkValid(name, dataObj);
   if (resultArr.length > 0) {
-    console.log("data are invalid!__________________");
+    console.debug("data are invalid!__________________");
     deferred.reject(resultArr);
   }
   var tb = getTbDefine(name);
   var sql = "update " + tb.table_name + " set [fldstr]" + " where [pkstr]";
-  var fldstr = "", valarr = [],  pkstr = "";
+  var fldstr = "",
+    valarr = [],
+    pkstr = "";
   var columnIndex = 0;
 
   for (let item of tb.FIELD_DEFINITION) {
@@ -676,8 +669,8 @@ var update = function (name, dataObj) {
   sql = sql
     .replace("[fldstr]", fldstr)
     .replace("[pkstr]", tb.PK_FIELD + "=" + dataObj[tb.PK_FIELD]);
-  console.log("sql=" + sql);
-  console.log("valarr=" + valarr);
+  console.debug("sql=" + sql);
+  console.debug("valarr=" + valarr);
   db2.query(sql, valarr, (error, results) => {
     if (error) {
       deferred.reject(error);
@@ -700,7 +693,8 @@ var remove = function (name, dataObj) {
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "delete from " + tb.table_name + " where [fldstr]";
-  var fldstr = "", valarr = [];
+  var fldstr = "",
+    valarr = [];
   var columnIndex = 0;
   for (let item of tb.FIELD_DEFINITION) {
     var fldname = item.column_name;
@@ -711,8 +705,8 @@ var remove = function (name, dataObj) {
   }
   fldstr = fldstr.substring(0, fldstr.length - 5);
   sql = sql.replace("[fldstr]", fldstr);
-  console.log("sql=" + sql);
-  console.log("valarr=" + valarr);
+  console.debug("sql=" + sql);
+  console.debug("valarr=" + valarr);
   db2.query(sql, valarr, (error, results) => {
     if (error) {
       deferred.reject(error);
@@ -858,20 +852,20 @@ var setPK = function () {
             inner join pg_type on pg_type.oid = pg_attribute.atttypid \
             where  pg_constraint.contype=\'p\'';
   exeQuery(sql).then(function (data) {
-    console.log("data.rows.length === " + data.rows.length);
+    console.debug("data.rows.length === " + data.rows.length);
     for (var i = 0; i < data.rows.length; i++) {
       for (var j = 0; j < tbDefine.length; j++) {
         if (data.rows[i].TABLENAME == tbDefine[j].table_name) {
-          console.log(data.rows[i].COLNAME);
+          console.debug(data.rows[i].COLNAME);
           tbDefine[j].PK_FIELD = data.rows[i].COLNAME;
         }
       }
       if (i == data.rows.length - 1) {
         fs.writeFile("./tbinfo.json", JSON.stringify(tbDefine), function (err) {
           if (err) {
-            return console.log(err);
+            return console.debug(err);
           }
-          console.log("The file was saved!");
+          console.debug("The file was saved!");
         });
         deferred.resolve(tbDefine);
       }
@@ -904,4 +898,5 @@ module.exports = {
   init: init,
   setTimeFormat: setTimeFormat,
   setDbname: setDbname,
+  executeQuerys: executeQuerys,
 };
