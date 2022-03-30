@@ -513,9 +513,7 @@ var executeQuery = async function (sql, valArr)  {
  * 
  **/
 var _insert = function (name, dataObj) {
-  console.log("connection ==== " + context.get().connection)
   const connect = (context == null || context.get() == null) ? db2: context.get().connection
-  
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "insert into " + tb.table_name + "([fldstr]) values([valstr])";
