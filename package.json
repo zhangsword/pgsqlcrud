@@ -1,6 +1,6 @@
 {
-  "name": "pgcrud",
-  "version": "0.0.8",
+  "name": "pgsqlcrud",
+  "version": "0.0.9",
   "private": false,
   "scripts": {
     "test": "mocha"
