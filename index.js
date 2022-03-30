@@ -478,6 +478,19 @@ var executeQuerys = async function (sqls, valstrs) {
   }
 };
 
+var executeQuery = async function (sql, valArr)  {
+  var deferred = Q.defer();
+  db2.query(sql, valArr, (error, results) => {
+    if (error) {
+      console.debug("error>>>>>>> " + error);
+      deferred.reject(error);
+    } else {
+      deferred.resolve(results);
+    }
+  });
+  return deferred.promise;
+};
+
 /**
  * mapping fieldname with JSON field and insert into table named "name" parameter
  *
@@ -899,4 +912,5 @@ module.exports = {
   setTimeFormat: setTimeFormat,
   setDbname: setDbname,
   executeQuerys: executeQuerys,
+  executeQuery: executeQuery,
 };
