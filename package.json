@@ -1,6 +1,6 @@
 {
   "name": "pgsqlcrud",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "private": false,
   "scripts": {
     "test": "mocha"
@@ -9,12 +9,11 @@
     "express": "^4.17.3",
     "log4node": "0.1.6",
     "moment": "2.18.1",
+    "node-execution-context": "^3.0.2",
     "pg": "^8.7.3",
     "postgres": "^1.0.2",
     "postgresql": "^0.0.1",
     "q": "1.5.0"
-  },
-  "devDependencies": {
   },
   "engines": {
     "node": "4.x"

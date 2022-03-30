@@ -4,6 +4,8 @@
  * sword_zhang@163.com
  * MIT Licensed
  */
+
+
 var tbDefine = [];
 var dbname = "TEST";
 var Q = require("q");
@@ -511,6 +513,9 @@ var executeQuery = async function (sql, valArr)  {
  * 
  **/
 var _insert = function (name, dataObj) {
+  console.log("connection ==== " + context.get().connection)
+  const connect = (context == null || context.get() == null) ? db2: context.get().connection
+  
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "insert into " + tb.table_name + "([fldstr]) values([valstr])";
@@ -536,7 +541,7 @@ var _insert = function (name, dataObj) {
     .replace("[valstr]", valstr)
     .concat(" RETURNING *");
 
-  db2.query(sql, valarr, (error, results) => {
+  connect.query(sql, valarr, (error, results) => {
     if (error) {
       console.debug("error>>>>>>> " + error);
       deferred.reject(error);
@@ -787,6 +792,9 @@ var describeTable = function (tableName) {
 var init = function (options) {
   log.setLogLevel("info");
   db2 = options.db;
+  if (options.app !== null) {
+    options.app.use('/', ContextMiddleware)
+  }
   if (options.dbname != null && options.dbname != undefined) {
     dbname = options.dbname;
   }
@@ -899,6 +907,22 @@ function setTbInfo(filePath) {
   return deferred.promise;
 }
 
+var beginTrans = async function () {
+  const client = await db2.connect();
+  await context.set({connection: client})
+  await client.query('BEGIN')
+}
+
+var commit = function () {
+  const connect = (context == null || context.get() == null) ? db2: context.get().connection
+  connect.query('COMMIT')
+}
+
+var rollback = function () {
+  const connect = (context == null || context.get() == null) ? db2: context.get().connection
+  connect.query("ROLLBACK")
+}
+
 module.exports = {
   get: get,
   getById: getById,
@@ -913,4 +937,13 @@ module.exports = {
   setDbname: setDbname,
   executeQuerys: executeQuerys,
   executeQuery: executeQuery,
+  beginTrans: beginTrans,
+  commit: commit,
+  rollback: rollback,
+};
+
+const context = require('node-execution-context');
+
+const ContextMiddleware = (req, res, next) => {
+  context.run(next, { reference: Math.random() });
 };

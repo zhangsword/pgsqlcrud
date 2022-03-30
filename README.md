@@ -80,7 +80,29 @@ tools of node.js for crud on db2
     dbutils.insert("pgsqlcrudtest",tbObj).then(function(rdata){
           console.log("retdata=" + JSON.stringify(rdata));
     });
-    
+
+//注册中间件
+const context = require('node-execution-context');
+const ContextMiddleware = (req, res, next) => {
+  context.run(next, { reference: Math.random() });
+};
+app.use('/', ContextMiddleware);
+
+
+//初始化的时候多加上app参数，app 为Express
+await init({ db: pool, dbname: "buzzudev", app: app })
+
+//事务开始
+await beginTrans()
+
+//执行操作
+await insert("users", user)
+
+//提交事务
+await commit()
+
+// 如果失败，回滚事务
+await rollback()
 
 You can refer test.js for further detail!
 
