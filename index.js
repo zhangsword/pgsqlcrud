@@ -278,7 +278,6 @@ var checkValid = function (name, tbObj) {
  *
  **/
 var getTbDefine = function (name) {
-  console.debug("tbDefine ====== " + tbDefine);
   for (var i = 0; i < tbDefine.length; i++) {
     var item = tbDefine[i];
     if (item.table_name == name) {
@@ -345,7 +344,6 @@ var getFldDefine = function (tbname, fldname) {
  **/
 function exeQuery(sql) {
   var deferred = Q.defer();
-  console.debug("sql=" + sql);
   db2.query(sql, function (error, data) {
     if (error) {
       log.error("db error:" + JSON.stringify(error));
@@ -516,7 +514,7 @@ var _insert = function (name, dataObj) {
   const connect = (context == null || context.get() == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
-  var sql = "insert into " + tb.table_name + "([fldstr]) values([valstr])";
+  var sql = "insert into " + tb.table_schema + '.' + tb.table_name + "([fldstr]) values([valstr])";
   var fldstr = "";
   var valstr = "";
   var valarr = [];
@@ -584,16 +582,14 @@ var _insert = function (name, dataObj) {
 var get = function (name, dataObj) {
   var deferred = Q.defer();
   var tb = getTbDefine(name);
-  var sql = "select * from " + tb.table_name + " where [fldstr]";
+  var sql = "select * from " +  tb.table_schema + '.' + tb.table_name + " where [fldstr]";
 
   var fldstr = "",
-    valarr = [];
-  console.debug("tb.FIELD_DEFINITION.length==== " + tb.FIELD_DEFINITION.length);
+  valarr = [];
   var paraCount = 0;
   for (var i = 0; i < tb.FIELD_DEFINITION.length; i++) {
     var item = tb.FIELD_DEFINITION[i];
     var fldname = item.column_name;
-    console.debug("column_name===" + item.column_name);
     if (dataObj[fldname] != null && dataObj[fldname] != undefined) {
       fldstr = fldstr + fldname + " = $" + ++paraCount + " and ";
       valarr.push(dataObj[fldname]);
@@ -604,11 +600,9 @@ var get = function (name, dataObj) {
   sql = sql.replace("[fldstr]", fldstr);
 
   db2.query(sql, valarr, (error, results) => {
-    console.debug("error====" + error);
     if (error) {
       deferred.reject(error);
     } else {
-      console.debug(results.rows);
       deferred.resolve(results.rows);
     }
   });
@@ -668,7 +662,7 @@ var update = function (name, dataObj) {
     deferred.reject(resultArr);
   }
   var tb = getTbDefine(name);
-  var sql = "update " + tb.table_name + " set [fldstr]" + " where [pkstr]";
+  var sql = "update " + tb.table_schema + '.' + tb.table_name + " set [fldstr]" + " where [pkstr]";
   var fldstr = "",
     valarr = [],
     pkstr = "";
@@ -685,8 +679,6 @@ var update = function (name, dataObj) {
   sql = sql
     .replace("[fldstr]", fldstr)
     .replace("[pkstr]", tb.PK_FIELD + "=" + dataObj[tb.PK_FIELD]);
-  console.debug("sql=" + sql);
-  console.debug("valarr=" + valarr);
   db2.query(sql, valarr, (error, results) => {
     if (error) {
       deferred.reject(error);
@@ -708,7 +700,7 @@ var update = function (name, dataObj) {
 var remove = function (name, dataObj) {
   var deferred = Q.defer();
   var tb = getTbDefine(name);
-  var sql = "delete from " + tb.table_name + " where [fldstr]";
+  var sql = "delete from " + tb.table_schema + '.'  + tb.table_name + " where [fldstr]";
   var fldstr = "",
     valarr = [];
   var columnIndex = 0;
@@ -751,7 +743,7 @@ var removeById = function (name, id) {
 var describeDatabase = function () {
   var deferred = Q.defer();
   var sql =
-    "SELECT distinct table_name FROM information_schema.columns c WHERE table_schema = 'public' ";
+    "SELECT distinct table_name, table_schema FROM information_schema.columns c WHERE table_schema = 'public' ";
   db2.query(sql, function (err, results) {
     if (err) {
       log.error(err);
@@ -790,7 +782,7 @@ var describeTable = function (tableName) {
 var init = function (options) {
   log.setLogLevel("info");
   db2 = options.db;
-  if (options.app !== null) {
+  if (options.app !== null && options.app !== undefined) {
     options.app.use('/', ContextMiddleware)
   }
   if (options.dbname != null && options.dbname != undefined) {
@@ -807,10 +799,9 @@ var init = function (options) {
   describeDatabase().then(function (data, err) {
     var promises = [];
     tbDefine = data;
-    console.error(data);
     for (var i = 0; i < tbDefine.length; i++) {
-      var item = tbDefine[i];
-      promises.push(describeTable(item.table_name));
+      var item = tbDefine[i]
+      promises.push(describeTable(item.table_name))
     }
 
     Q.all(promises).then(function (result) {
