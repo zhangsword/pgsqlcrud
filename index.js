@@ -544,7 +544,7 @@ var _insert = function (name, dataObj) {
       console.debug("error>>>>>>> " + error);
       deferred.reject(error);
     } else {
-      deferred.resolve(results);
+      deferred.resolve(results.rows);
     }
   });
 
@@ -913,12 +913,16 @@ var beginTrans = async function () {
 
 var commit = function () {
   const connect = (context == null || context.get() == null) ? db2: context.get().connection
-  connect.query('COMMIT')
+  connect.query('COMMIT', function () {
+    connect.release()
+  })
 }
 
 var rollback = function () {
   const connect = (context == null || context.get() == null) ? db2: context.get().connection
-  connect.query("ROLLBACK")
+  connect.query("ROLLBACK", function () {
+    connect.release()
+  })
 }
 
 module.exports = {
@@ -943,5 +947,7 @@ module.exports = {
 const context = require('node-execution-context');
 
 const ContextMiddleware = (req, res, next) => {
-  context.run(next, { reference: Math.random() });
+  let reference = Math.random()
+  context.create({ reference });
+  next()
 };
