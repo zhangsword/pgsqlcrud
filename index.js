@@ -479,8 +479,9 @@ var executeQuerys = async function (sqls, valstrs) {
 };
 
 var executeQuery = async function (sql, valArr)  {
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
-  db2.query(sql, valArr, (error, results) => {
+  connect.query(sql, valArr, (error, results) => {
     if (error) {
       console.debug("error>>>>>>> " + error);
       deferred.reject(error);
@@ -511,7 +512,7 @@ var executeQuery = async function (sql, valArr)  {
  * 
  **/
 var _insert = function (name, dataObj) {
-  const connect = (context == null || context.get() == null) ? db2: context.get().connection
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "insert into " + tb.table_schema + '.' + tb.table_name + "([fldstr]) values([valstr])";
@@ -612,7 +613,7 @@ var get = function (name, dataObj) {
 var getAll = function (name) {
   var deferred = Q.defer();
   var tb = getTbDefine(name);
-  var sql = "select * from " + tb.table_name;
+  var sql = "select * from " + tb.table_schema + '.' + tb.table_name;
   db2.query(sql, (error, results) => {
     if (error) {
       console.debug("error====" + error);
@@ -655,6 +656,7 @@ var getById = function (name, id) {
  *
  **/
 var update = function (name, dataObj) {
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var resultArr = checkValid(name, dataObj);
   if (resultArr.length > 0) {
@@ -679,7 +681,7 @@ var update = function (name, dataObj) {
   sql = sql
     .replace("[fldstr]", fldstr)
     .replace("[pkstr]", tb.PK_FIELD + "=" + dataObj[tb.PK_FIELD]);
-  db2.query(sql, valarr, (error, results) => {
+  connect.query(sql, valarr, (error, results) => {
     if (error) {
       deferred.reject(error);
     } else {
@@ -698,6 +700,7 @@ var update = function (name, dataObj) {
  *
  **/
 var remove = function (name, dataObj) {
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "delete from " + tb.table_schema + '.'  + tb.table_name + " where [fldstr]";
@@ -715,7 +718,7 @@ var remove = function (name, dataObj) {
   sql = sql.replace("[fldstr]", fldstr);
   console.debug("sql=" + sql);
   console.debug("valarr=" + valarr);
-  db2.query(sql, valarr, (error, results) => {
+  connect.query(sql, valarr, (error, results) => {
     if (error) {
       deferred.reject(error);
     } else {
@@ -903,14 +906,14 @@ var beginTrans = async function () {
 }
 
 var commit = function () {
-  const connect = (context == null || context.get() == null) ? db2: context.get().connection
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   connect.query('COMMIT', function () {
     connect.release()
   })
 }
 
 var rollback = function () {
-  const connect = (context == null || context.get() == null) ? db2: context.get().connection
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   connect.query("ROLLBACK", function () {
     connect.release()
   })
