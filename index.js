@@ -787,6 +787,9 @@ var init = function (options) {
   db2 = options.db;
   if (options.app !== null && options.app !== undefined) {
     options.app.use('/', ContextMiddleware)
+  } else {
+    let reference = Math.random()
+    context.create({ reference })
   }
   if (options.dbname != null && options.dbname != undefined) {
     dbname = options.dbname;
