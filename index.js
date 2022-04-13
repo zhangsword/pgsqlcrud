@@ -647,7 +647,7 @@ var getAllWithPagination = async function (name, page, size) {
     } else {
       paginationResult.totalCount = totalCount.rows[0].count
       paginationResult.totalPage = totalPage
-      paginationResult.currrentPage = pageParam
+      paginationResult.currentPage = pageParam
       paginationResult.data = results.rows
       deferred.resolve(paginationResult)
     }
