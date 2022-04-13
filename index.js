@@ -40,6 +40,9 @@ var intType = 4;
 var varcharType = 12;
 var timestampType = 93;
 
+const DEFAUTLT_SIZE = 10
+const DEFAUTLT_PAGE = 1
+
 /**
  * check field value on type,length,format
  *
@@ -626,6 +629,32 @@ var getAll = function (name) {
   return deferred.promise;
 };
 
+var getAllWithPagination = async function (name, page, size) {
+  var deferred = Q.defer();
+  var tb = getTbDefine(name);
+
+  let pageParam = (page == null)?DEFAUTLT_PAGE:page
+  let sizeParam = (size == null)?DEFAUTLT_SIZE:size
+
+  const totalCount = await executeQuery('select count(1) from ' + tb.table_schema + '.' + tb.table_name, [])
+  const totalPage = Math.ceil(totalCount.rows[0].count / sizeParam)
+  
+  let paginationResult = {}
+  var sql = "select * from " + tb.table_schema + '.' + tb.table_name + ' offset ($1-1)*$2 limit $2';
+  db2.query(sql, [pageParam, sizeParam], (error, results) => {
+    if (error) {
+      deferred.reject(error);
+    } else {
+      paginationResult.totalCount = totalCount.rows[0].count
+      paginationResult.totalPage = totalPage
+      paginationResult.currrentPage = pageParam
+      paginationResult.data = results.rows
+      deferred.resolve(paginationResult)
+    }
+  });
+  return deferred.promise;
+}
+
 /**
  * get records with PK id
  *
@@ -926,6 +955,7 @@ module.exports = {
   get: get,
   getById: getById,
   getAll: getAll,
+  getAllWithPagination: getAllWithPagination,
   insert: insert,
   remove: remove,
   removeById: removeById,
@@ -939,12 +969,4 @@ module.exports = {
   beginTrans: beginTrans,
   commit: commit,
   rollback: rollback,
-};
-
-const context = require('node-execution-context');
-
-const ContextMiddleware = (req, res, next) => {
-  let reference = Math.random()
-  context.create({ reference });
-  next()
-};
+}
