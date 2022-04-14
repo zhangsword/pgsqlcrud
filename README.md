@@ -58,6 +58,12 @@ tools of node.js for crud on db2
     dbutils.insert("pgsqlcrudtest",tbObj).then(function(rdata){
       console.log("retdata=" + JSON.stringify(rdata));
     });
+
+    //pagenation, parameter are tablename, page index, page size
+    //return totalCount totalPage currentPage data
+    dbutils.getAllWithPagination('pgsqlcrudtest', 1, 10)(function(rdata){
+      console.log("retdata=" + JSON.stringify(rdata));
+    });
     
 ## Error Check
 

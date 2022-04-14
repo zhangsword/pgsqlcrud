@@ -640,10 +640,10 @@ var getAllWithPagination = async function (name, page, size) {
   const totalPage = Math.ceil(totalCount.rows[0].count / sizeParam)
   
   let paginationResult = {}
-  var sql = "select * from " + tb.table_schema + '.' + tb.table_name + ' offset ($1-1)*$2 limit $2';
+  var sql = "select * from " + tb.table_schema + '.' + tb.table_name + ' offset ($1-1)*$2 limit $2'
   db2.query(sql, [pageParam, sizeParam], (error, results) => {
     if (error) {
-      deferred.reject(error);
+      deferred.reject(error)
     } else {
       paginationResult.totalCount = totalCount.rows[0].count
       paginationResult.totalPage = totalPage
