@@ -59,11 +59,15 @@ tools of node.js for crud on db2
       console.log("retdata=" + JSON.stringify(rdata));
     });
 
-    //pagenation, parameter are tablename, page index, page size
+    //pagination, parameter are tablename, page index, page size
     //return totalCount totalPage currentPage data
     dbutils.getAllWithPagination('pgsqlcrudtest', 1, 10)(function(rdata){
       console.log("retdata=" + JSON.stringify(rdata));
     });
+
+    //pagination, parameter are sql, vars, orderBy and pagination
+    dbutils.executeQuery('select user_id, name, phone, create_by from public.user where create_time > $1', ['2022-01-01'], 
+    {'cols':'create_by','method': 'desc'}, {'page': 2, 'size': 3})
     
 ## Error Check
 

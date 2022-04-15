@@ -481,10 +481,54 @@ var executeQuerys = async function (sqls, valstrs) {
   }
 };
 
-var executeQuery = async function (sql, valArr)  {
+var executeQuery = async function (sql, valArr, orderBy, pagination)  {
   const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  var deferred = Q.defer()
+  if (!sql.toLowerCase().startsWith('select')) {
+    connect.query(sql, valArr, (error, results) => {
+      if (error) {
+        console.log("error>>>>>>> " + error);
+        deferred.reject(error);
+      } else {
+        deferred.resolve(results);
+      }
+    });
+  } else {
+    let order = (orderBy !== null && orderBy !== undefined)
+    let pageParam = (pagination == null)?DEFAUTLT_PAGE:pagination.page
+    let sizeParam = (pagination == null)?DEFAUTLT_SIZE:pagination.size
+
+    const result = await executeQueryNoPage('select count(1) from (' + sql + ') as foo', valArr)
+    const totalCount = result.rows[0].count
+    const totalPage = Math.ceil(totalCount / sizeParam)
+    let offPos = (pageParam -1) * sizeParam
+    
+    if (order) { 
+      let orderByCols = orderBy.cols
+      let orderByMethod = orderBy.method
+      sql = sql.concat( 'order by ').concat(orderByCols).concat(' ').concat(orderByMethod)
+    }
+    sql = sql.concat(' offset ' + offPos + ' limit ' + sizeParam)
+    let paginationResult = {}
+    connect.query(sql, valArr, (error, results) => {
+      if (error) {
+        console.debug("error>>>>>>> " + error);
+        deferred.reject(error);
+      } else {
+        paginationResult.totalCount = totalCount
+        paginationResult.totalPage = totalPage
+        paginationResult.currentPage = pageParam
+        paginationResult.data = results.rows
+        deferred.resolve(paginationResult)
+      }
+    })
+  }
+  return deferred.promise;
+};
+
+var executeQueryNoPage = async function (sql, valArr)  {
   var deferred = Q.defer();
-  connect.query(sql, valArr, (error, results) => {
+  db2.query(sql, valArr, (error, results) => {
     if (error) {
       console.debug("error>>>>>>> " + error);
       deferred.reject(error);
