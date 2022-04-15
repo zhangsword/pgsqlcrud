@@ -1014,3 +1014,11 @@ module.exports = {
   commit: commit,
   rollback: rollback,
 }
+
+const context = require('node-execution-context');
+
+const ContextMiddleware = (req, res, next) => {
+  let reference = Math.random()
+  context.create({ reference });
+  next()
+};
