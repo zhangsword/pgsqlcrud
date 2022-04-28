@@ -508,8 +508,9 @@ var executeQuery = async function (sql, valArr, orderBy, pagination)  {
       let orderByMethod = orderBy.method
       sql = sql.concat(' order by ')
       orderByCols.split(',').forEach(element => sql = sql.concat(element).concat(' ').concat(orderByMethod).concat(','))
+      sql = sql.substring(0, sql.length-1)
     }
-    sql = sql.substring(0, sql.length-1)
+    
     sql = sql.concat(' offset ' + offPos + ' limit ' + sizeParam)
     let paginationResult = {}
     connect.query(sql, valArr, (error, results) => {
