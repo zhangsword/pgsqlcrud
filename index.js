@@ -506,8 +506,10 @@ var executeQuery = async function (sql, valArr, orderBy, pagination)  {
     if (order) { 
       let orderByCols = orderBy.cols
       let orderByMethod = orderBy.method
-      sql = sql.concat( 'order by ').concat(orderByCols).concat(' ').concat(orderByMethod)
+      sql = sql.concat(' order by ')
+      orderByCols.split(',').forEach(element => sql = sql.concat(element).concat(' ').concat(orderByMethod).concat(','))
     }
+    sql = sql.substring(0, sql.length-1)
     sql = sql.concat(' offset ' + offPos + ' limit ' + sizeParam)
     let paginationResult = {}
     connect.query(sql, valArr, (error, results) => {
@@ -1010,6 +1012,7 @@ module.exports = {
   setDbname: setDbname,
   executeQuerys: executeQuerys,
   executeQuery: executeQuery,
+  executeQueryNoPage: executeQueryNoPage,
   beginTrans: beginTrans,
   commit: commit,
   rollback: rollback,
@@ -1021,4 +1024,4 @@ const ContextMiddleware = (req, res, next) => {
   let reference = Math.random()
   context.create({ reference });
   next()
-};
+}
