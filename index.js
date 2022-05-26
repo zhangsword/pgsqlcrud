@@ -463,7 +463,7 @@ var executeQuerys = async function (sqls, valstrs) {
     }
     await Q.all(promises).then(
       function (result2) {
-        console.log(result2)
+        // console.log(result2)
         client.query('COMMIT')
         deferred.resolve(result2)
         return deferred.promise
