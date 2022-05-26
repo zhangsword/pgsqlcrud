@@ -984,16 +984,16 @@ var beginTrans = async function () {
   await client.query('BEGIN')
 }
 
-var commit = function () {
+var commit = async function () {
   const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
-  connect.query('COMMIT', function () {
+  await connect.query('COMMIT', function () {
     connect.release()
   })
 }
 
-var rollback = function () {
+var rollback = async function () {
   const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
-  connect.query("ROLLBACK", function () {
+  await connect.query("ROLLBACK", function () {
     connect.release()
   })
 }
