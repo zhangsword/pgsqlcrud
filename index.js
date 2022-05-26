@@ -141,20 +141,11 @@ var checkArrValid = function (name, tbObjArr) {
  **/
 var checkValid = function (name, tbObj) {
   var deferred = Q.defer();
-  console.debug("check field start************************************");
   var resultArr = [];
   var tb = getTbDefine(name);
   for (var i = 0; i < tb.FIELD_DEFINITION.length; i++) {
     var item = tb.FIELD_DEFINITION[i];
     var data = tbObj[item.column_name];
-    console.debug(
-      "Checking field:" + item.column_name + " value=" + data + "________"
-    );
-    if (typeof data == "string" || data instanceof String) {
-      console.debug("data='" + data + "'");
-    } else {
-      console.debug("data=" + data);
-    }
     if (
       !item.is_nullable &&
       item.column_name != tb.PK_FIELD &&
@@ -352,7 +343,6 @@ function exeQuery(sql) {
       log.error("db error:" + JSON.stringify(error));
       deferred.reject(error);
     } else {
-      console.debug("db data=" + JSON.stringify(data));
       deferred.resolve(data);
     }
   });
@@ -435,7 +425,6 @@ var insert = function (name, dataObj) {
     });
   } else {
     checkValid(name, dataObj).then(function (result) {
-      console.debug("check result=" + JSON.stringify(result));
       if (result.length > 0) {
         deferred.reject(result);
       } else {
@@ -669,7 +658,6 @@ var getAll = function (name) {
       console.debug("error====" + error);
       deferred.reject(error);
     } else {
-      console.debug(results.rows);
       deferred.resolve(results.rows);
     }
   });
@@ -716,7 +704,6 @@ var getAllWithPagination = async function (name, page, size) {
  * 
  **/
 var getById = function (name, id) {
-  console.debug(name);
   var tb = getTbDefine(name);
   var dataObj = {};
   dataObj[tb.PK_FIELD] = id;
@@ -792,8 +779,6 @@ var remove = function (name, dataObj) {
   }
   fldstr = fldstr.substring(0, fldstr.length - 5);
   sql = sql.replace("[fldstr]", fldstr);
-  console.debug("sql=" + sql);
-  console.debug("valarr=" + valarr);
   connect.query(sql, valarr, (error, results) => {
     if (error) {
       deferred.reject(error);
@@ -944,11 +929,9 @@ var setPK = function () {
             inner join pg_type on pg_type.oid = pg_attribute.atttypid \
             where  pg_constraint.contype=\'p\'';
   exeQuery(sql).then(function (data) {
-    console.debug("data.rows.length === " + data.rows.length);
     for (var i = 0; i < data.rows.length; i++) {
       for (var j = 0; j < tbDefine.length; j++) {
         if (data.rows[i].TABLENAME == tbDefine[j].table_name) {
-          console.debug(data.rows[i].COLNAME);
           tbDefine[j].PK_FIELD = data.rows[i].COLNAME;
         }
       }
