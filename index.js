@@ -405,7 +405,7 @@ var getSeq = function (name) {
     ]
  * 
  **/
-var insert = function (name, dataObj) {
+var insert = async function (name, dataObj) {
   var deferred = Q.defer();
   var rArr = [];
   if (dataObj.constructor == Array) {
@@ -718,7 +718,7 @@ var getById = function (name, id) {
  * @return promise object included Affected rows.
  *
  **/
-var update = function (name, dataObj) {
+var update = async function (name, dataObj) {
   const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var resultArr = checkValid(name, dataObj);
@@ -762,7 +762,7 @@ var update = function (name, dataObj) {
  * @return promise object included Affected rows.
  *
  **/
-var remove = function (name, dataObj) {
+var remove = async function (name, dataObj) {
   const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
@@ -797,7 +797,7 @@ var remove = function (name, dataObj) {
  * @return promise object included Affected rows.
  *
  **/
-var removeById = function (name, id) {
+var removeById = async function (name, id) {
   var tb = getTbDefine(name);
   var dataObj = {};
   dataObj[tb.PK_FIELD] = id;
