@@ -519,13 +519,14 @@ var executeQuery = async function (sql, valArr, orderBy, pagination)  {
 };
 
 var executeQueryNoPage = async function (sql, valArr)  {
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
-  db2.query(sql, valArr, (error, results) => {
+  connect.query(sql, valArr, (error, results) => {
     if (error) {
       console.debug("error>>>>>>> " + error);
-      deferred.reject(error);
+      deferred.reject(error)
     } else {
-      deferred.resolve(results);
+      deferred.resolve(results)
     }
   });
   return deferred.promise;
