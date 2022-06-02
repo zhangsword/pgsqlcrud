@@ -621,6 +621,7 @@ var _insert = function (name, dataObj) {
  * 
  **/
 var get = function (name, dataObj) {
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "select * from " +  tb.table_schema + '.' + tb.table_name + " where [fldstr]";
@@ -640,7 +641,7 @@ var get = function (name, dataObj) {
   fldstr = fldstr.substring(0, fldstr.length - 5);
   sql = sql.replace("[fldstr]", fldstr);
 
-  db2.query(sql, valarr, (error, results) => {
+  connect.query(sql, valarr, (error, results) => {
     if (error) {
       deferred.reject(error);
     } else {
@@ -651,10 +652,11 @@ var get = function (name, dataObj) {
 };
 
 var getAll = function (name) {
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "select * from " + tb.table_schema + '.' + tb.table_name;
-  db2.query(sql, (error, results) => {
+  connect.query(sql, (error, results) => {
     if (error) {
       console.debug("error====" + error);
       deferred.reject(error);
@@ -666,6 +668,7 @@ var getAll = function (name) {
 };
 
 var getAllWithPagination = async function (name, page, size) {
+  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
 
@@ -677,7 +680,7 @@ var getAllWithPagination = async function (name, page, size) {
   
   let paginationResult = {}
   var sql = "select * from " + tb.table_schema + '.' + tb.table_name + ' offset ($1-1)*$2 limit $2'
-  db2.query(sql, [pageParam, sizeParam], (error, results) => {
+  connect.query(sql, [pageParam, sizeParam], (error, results) => {
     if (error) {
       deferred.reject(error)
     } else {
