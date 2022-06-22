@@ -471,7 +471,7 @@ var executeQuerys = async function (sqls, valstrs) {
 };
 
 var executeQuery = async function (sql, valArr, orderBy, pagination)  {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer()
   if (!sql.toLowerCase().startsWith('select')) {
     connect.query(sql, valArr, (error, results) => {
@@ -519,7 +519,7 @@ var executeQuery = async function (sql, valArr, orderBy, pagination)  {
 };
 
 var executeQueryNoPage = async function (sql, valArr)  {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   connect.query(sql, valArr, (error, results) => {
     if (error) {
@@ -552,7 +552,7 @@ var executeQueryNoPage = async function (sql, valArr)  {
  * 
  **/
 var _insert = function (name, dataObj) {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "insert into " + tb.table_schema + '.' + tb.table_name + "([fldstr]) values([valstr])";
@@ -621,7 +621,7 @@ var _insert = function (name, dataObj) {
  * 
  **/
 var get = function (name, dataObj) {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "select * from " +  tb.table_schema + '.' + tb.table_name + " where [fldstr]";
@@ -652,7 +652,7 @@ var get = function (name, dataObj) {
 };
 
 var getAll = function (name) {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "select * from " + tb.table_schema + '.' + tb.table_name;
@@ -668,7 +668,7 @@ var getAll = function (name) {
 };
 
 var getAllWithPagination = async function (name, page, size) {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
 
@@ -723,7 +723,7 @@ var getById = function (name, id) {
  *
  **/
 var update = async function (name, dataObj) {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var resultArr = checkValid(name, dataObj);
   if (resultArr.length > 0) {
@@ -767,7 +767,7 @@ var update = async function (name, dataObj) {
  *
  **/
 var remove = async function (name, dataObj) {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   var deferred = Q.defer();
   var tb = getTbDefine(name);
   var sql = "delete from " + tb.table_schema + '.'  + tb.table_name + " where [fldstr]";
@@ -972,14 +972,14 @@ var beginTrans = async function () {
 }
 
 var commit = async function () {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   await connect.query('COMMIT', function () {
     connect.release()
   })
 }
 
 var rollback = async function () {
-  const connect = (context == null || context.get().connection == null) ? db2: context.get().connection
+  const connect = (context == null  || context.get() == null || context.get().connection == null) ? db2: context.get().connection
   await connect.query("ROLLBACK", function () {
     connect.release()
   })
